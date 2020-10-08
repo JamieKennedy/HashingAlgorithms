@@ -193,10 +193,10 @@ namespace HashingAlgorithms {
         }
 
         private string GetOutput() {
-            string output = bufferA.ToString("x8") +
-                bufferB.ToString("x8") +
-                bufferC.ToString("x8") +
-                bufferD.ToString("x8");
+            string output = ReverseInt(bufferA).ToString("x8") +
+                ReverseInt(bufferB).ToString("x8") +
+                ReverseInt(bufferC).ToString("x8") +
+                ReverseInt(bufferD).ToString("x8");
 
             return output;
         }
