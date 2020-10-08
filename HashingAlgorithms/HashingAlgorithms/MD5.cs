@@ -12,7 +12,7 @@ namespace HashingAlgorithms {
         private uint bufferA, bufferB, bufferC, bufferD, bufferAA, bufferBB, bufferCC, bufferDD;
         private uint[] currentBlock;
 
-
+        // Array containing values for the integer part of 2^32 * abs(sin(i))
         protected readonly static uint[] T = new uint[64]
             {   0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,
                 0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,
@@ -39,18 +39,22 @@ namespace HashingAlgorithms {
 
         }
 
+        // F auxiliary function - RCF-1321
         private uint FAuxFunc(uint x, uint y, uint z) {
             return (x & y) | ((~x) & z);
         }
 
+        // G auxiliary function - RCF-1321
         private uint GAuxFunc(uint x, uint y, uint z) {
             return (x & x) | (y & (~z));
         }
 
+        // H auxiliary function - RCF-1321
         private uint HAuxFunc(uint x, uint y, uint z) {
             return x ^ y ^ z;
         }
 
+        // I auxiliary function - RCF-1321
         private uint IAuxFunc(uint x, uint y, uint z) {
             return y ^ (x | (~z));
         }
@@ -60,8 +64,9 @@ namespace HashingAlgorithms {
             InitBuffers();
             int numberOfBlocks = (message.Length * 8) / 512;
 
-            for (int i = 0; i < numberOfBlocks; i++) {
+            for (int i = 0; i < numberOfBlocks; i++) { // Each 512 bit block of the 
                 currentBlock = new uint[16];
+                // Copy 4 bytes into 1 32-but unsigned int
                 for (int j = 0; j < 16; j++) {
                     byte[] bytes = {
                         message[(i * 64) + (j * 4)],
@@ -81,6 +86,7 @@ namespace HashingAlgorithms {
         }
 
         private void hash() {
+            // Copy current buffer values into temp buffers
             bufferAA = bufferA;
             bufferBB = bufferB;
             bufferCC = bufferC;
@@ -158,12 +164,14 @@ namespace HashingAlgorithms {
             RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 2, 15, 15, IAuxFunc(bufferD, bufferA, bufferB));
             RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 9, 21, 16, IAuxFunc(bufferC, bufferD, bufferA));
 
+            // Adds temp buffer values onto updated buffer values
             bufferA = bufferA + bufferAA;
             bufferB = bufferB + bufferBB;
             bufferC = bufferC + bufferCC;
             bufferD = bufferD + bufferDD;
         }
 
+        // Passes reference of 32-bit unsigned int which gets updated using the following funciton
         private void RoundFunction(ref uint a, uint b, uint c, uint d, int k, int s, int i, uint auxValue) {
             a = b + (a + auxValue + currentBlock[k] + T[i - 1]) << s;
         }
@@ -171,6 +179,7 @@ namespace HashingAlgorithms {
         static private byte[] PadBits(byte[] bytes) {
             int length = bytes.Length * 8;
 
+            // Number of bytes that need to added
             int padBytesNum = (512 - 64 - (length % 512)) / 8;
 
             byte[] paddedBytes = new byte[bytes.Length + padBytesNum + 8];
@@ -183,6 +192,7 @@ namespace HashingAlgorithms {
                 } else if (i < bytes.Length + padBytesNum) {
                     paddedBytes[i] = 0;
                 } else {
+                    // Adds 64-bit representation of the message size
                     long length64 = length;
                     byte[] length64Bytes = BitConverter.GetBytes(length64);
                     paddedBytes[i] = length64Bytes[i - bytes.Length - padBytesNum];
@@ -191,7 +201,9 @@ namespace HashingAlgorithms {
             return paddedBytes;
         }
 
+        // Append the 4 buffers hex values after they have been reversed
         private string GetOutput() {
+
             string output = ReverseInt(bufferA).ToString("x8") +
                 ReverseInt(bufferB).ToString("x8") +
                 ReverseInt(bufferC).ToString("x8") +
@@ -200,6 +212,7 @@ namespace HashingAlgorithms {
             return output;
         }
 
+        // Takes unsigned int and returns its reverse
         private uint ReverseInt(uint n) {
             return (((n & 0x000000ff) << 24) |
                         (n >> 24) |
@@ -207,6 +220,7 @@ namespace HashingAlgorithms {
                     ((n & 0x0000ff00) << 8));
         }
 
+        // Initialise the buffers values
         private void InitBuffers() {
             bufferA = 0x67452301;
             bufferB = 0xefcdab89;
