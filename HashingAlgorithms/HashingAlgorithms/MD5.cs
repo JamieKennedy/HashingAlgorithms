@@ -92,77 +92,71 @@ namespace HashingAlgorithms {
             bufferCC = bufferC;
             bufferDD = bufferD;
 
-            // Round 1
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 0, 7, 1, FAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 1, 12, 2, FAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 2, 17, 3, FAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 3, 22, 4, FAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 4, 7, 5, FAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 5, 12, 6, FAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 6, 17, 7, FAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 7, 22, 8, FAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 8, 7, 9, FAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 9, 12, 10, FAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 10, 17, 11, FAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 11, 22, 12, FAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 12, 7, 13, FAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 13, 12, 14, FAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 14, 17, 15, FAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 15, 22, 16, FAuxFunc(bufferC, bufferD, bufferA));
+            for (int i = 0; i < 64; i++) {
+                if (i >= 0 && i < 16) { // Round 1
+                    switch (i % 4) {
+                        case 0:
+                            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, i, 7, i + 1, FAuxFunc(bufferB, bufferC, bufferD));
+                            break;
+                        case 1:
+                            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, i, 12, i + 1, FAuxFunc(bufferA, bufferB, bufferC));
+                            break;
+                        case 2:
+                            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, i, 17, i + 1, FAuxFunc(bufferD, bufferA, bufferB));
+                            break;
+                        case 3:
+                            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, i, 22, i + 1, FAuxFunc(bufferC, bufferD, bufferA));
+                            break;
+                    }
+                } else if (i >= 16 && i < 32) { // Round 2
+                    switch (i % 4) {
+                        case 0:
+                            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, (5 * i + 1) % 16, 5, i + 1, GAuxFunc(bufferB, bufferC, bufferD));
+                            break;
+                        case 1:
+                            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, (5 * i + 1) % 16, 9, i + 1, GAuxFunc(bufferA, bufferB, bufferC));
+                            break;
+                        case 2:
+                            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, (5 * i + 1) % 16, 14, i + 1, GAuxFunc(bufferD, bufferA, bufferB));
+                            break;
+                        case 3:
+                            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, (5 * i + 1) % 16, 20, i + 1, GAuxFunc(bufferC, bufferD, bufferA));
+                            break;
+                    }
+                } else if (i >= 32 && i < 48) { // Round 3
+                    switch (i % 4) {
+                        case 0:
+                            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, (3 * i + 5) % 16, 4, i + 1, HAuxFunc(bufferB, bufferC, bufferD));
+                            break;
+                        case 1:
+                            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, (3 * i + 5) % 16, 11, i + 1, HAuxFunc(bufferA, bufferB, bufferC));
+                            break;
+                        case 2:
+                            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, (3 * i + 5) % 16, 16, i + 1, HAuxFunc(bufferD, bufferA, bufferB));
+                            break;
+                        case 3:
+                            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, (3 * i + 5) % 16, 23, i + 1, HAuxFunc(bufferC, bufferD, bufferA));
+                            break;
+                    }
+                } else {
+                    switch (i % 4) { // Round 4
+                        case 0:
+                            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, (7 * i) % 16, 6, i + 1, IAuxFunc(bufferB, bufferC, bufferD));
+                            break;
+                        case 1:
+                            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, (7 * i) % 16, 10, i + 1, IAuxFunc(bufferA, bufferB, bufferC));
+                            break;
+                        case 2:
+                            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, (7 * i) % 16, 15, i + 1, IAuxFunc(bufferD, bufferA, bufferB));
+                            break;
+                        case 3:
+                            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, (7 * i) % 16, 21, i + 1, IAuxFunc(bufferC, bufferD, bufferA));
+                            break;
+                    }
+                }
 
-            // Round 2
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 1, 5, 17, GAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 6, 9, 18, GAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 11, 14, 19, GAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 0, 20, 20, GAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 5, 5, 21, GAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 10, 9, 22, GAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 15, 14, 23, GAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 4, 20, 24, GAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 9, 5, 25, GAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 14, 9, 26, GAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 3, 14, 27, GAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 8, 20, 28, GAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 13, 5, 29, GAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 2, 9, 30, GAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 7, 14, 31, GAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 12, 20, 32, GAuxFunc(bufferC, bufferD, bufferA));
+            }
 
-            // Round 3
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 5, 4, 33, HAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 8, 11, 34, HAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 11, 16, 35, HAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 14, 23, 36, HAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 1, 4, 37, HAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 4, 11, 38, HAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 7, 16, 39, HAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 10, 23, 40, HAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 13, 4, 41, HAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 0, 11, 42, HAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 3, 16, 43, HAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 6, 23, 44, HAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 9, 4, 45, HAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 12, 11, 46, HAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 15, 16, 47, HAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 2, 23, 48, HAuxFunc(bufferC, bufferD, bufferA));
-
-            // Round 4
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 0, 6, 49, IAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 7, 10, 50, IAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 14, 15, 51, IAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 5, 21, 52, IAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 12, 6, 53, IAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 3, 10, 54, IAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 10, 15, 55, IAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 1, 21, 56, IAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 8, 6, 57, IAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 15, 10, 58, IAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 6, 15, 59, IAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 13, 21, 60, IAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 4, 6, 61, IAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 11, 10, 62, IAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 2, 15, 63, IAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 9, 21, 64, IAuxFunc(bufferC, bufferD, bufferA));
 
             // Adds temp buffer values onto updated buffer values
             bufferA = bufferA + bufferAA;
