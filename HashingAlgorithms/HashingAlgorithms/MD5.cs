@@ -46,7 +46,7 @@ namespace HashingAlgorithms {
 
         // G auxiliary function - RCF-1321
         private uint GAuxFunc(uint x, uint y, uint z) {
-            return (x & x) | (y & (~z));
+            return (x & z) | (y & (~z));
         }
 
         // H auxiliary function - RCF-1321
@@ -87,6 +87,8 @@ namespace HashingAlgorithms {
             bufferBB = bufferB;
             bufferCC = bufferC;
             bufferDD = bufferD;
+
+            Console.WriteLine(GetOutput());
 
             for (int i = 0; i < 64; i++) {
                 if (i >= 0 && i < 16) { // Round 1
@@ -152,6 +154,7 @@ namespace HashingAlgorithms {
                 }
 
             }
+
 
 
             // Adds temp buffer values onto updated buffer values

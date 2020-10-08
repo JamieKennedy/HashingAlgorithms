@@ -10,7 +10,6 @@ namespace HashingAlgorithms {
             MD5 hash = new MD5(str);
             string hashOut = hash.getHash();
             Console.WriteLine(hashOut);
-
         }
 
 
