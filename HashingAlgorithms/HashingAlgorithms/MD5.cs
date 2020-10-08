@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace HashingAlgorithms {
@@ -8,7 +9,28 @@ namespace HashingAlgorithms {
         public string input { get; set; }
         public string output { get; set; }
 
-        private byte[] bufferA, bufferB, bufferC, bufferD, currentBlock, bufferAA, bufferBB, bufferCC, bufferDD;
+        private uint bufferA, bufferB, bufferC, bufferD, bufferAA, bufferBB, bufferCC, bufferDD;
+        private uint[] currentBlock;
+
+
+        protected readonly static uint[] T = new uint[64] {
+            0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
+            0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
+            0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
+            0x6b901122, 0xfd987193, 0xa679438e, 0x49b40821,
+            0xf61e2562, 0xc040b340, 0x265e5a51, 0xe9b6c7aa,
+            0xd62f105d, 0x02441453, 0xd8a1e681, 0xe7d3fbc8,
+            0x21e1cde6, 0xc33707d6, 0xf4d50d87, 0x455a14ed,
+            0xa9e3e905, 0xfcefa3f8, 0x676f02d9, 0x8d2a4c8a,
+            0xfffa3942, 0x8771f681, 0x6d9d6122, 0xfde5380c,
+            0xa4beea44, 0x4bdecfa9, 0xf6bb4b60, 0xbebfbc70,
+            0x289b7ec6, 0xeaa127fa, 0xd4ef3085, 0x04881d05,
+            0xd9d4d039, 0xe6db99e5, 0x1fa27cf8, 0xc4ac5665,
+            0xf4292244, 0x432aff97, 0xab9423a7, 0xfc93a039,
+            0x655b59c3, 0x8f0ccc92, 0xffeff47d, 0x85845dd1,
+            0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
+            0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391
+        };
 
 
         public MD5(string input, string output = "hex") {
@@ -18,44 +40,20 @@ namespace HashingAlgorithms {
 
         }
 
-        private byte[] FAuxFunc(byte[] x, byte[] y, byte[] z) {
-            byte[] output = new byte[4];
-
-            for (int i = 0; i < 4; i++) {
-                output[i] = (byte)((x[i] & y[i]) | ((~x[i]) & z[i]));
-            }
-
-            return output;
+        private uint FAuxFunc(uint x, uint y, uint z) {
+            return (x & y) | ((~x) & z);
         }
 
-        private byte[] GAuxFunc(byte[] x, byte[] y, byte[] z) {
-            byte[] output = new byte[4];
-
-            for (int i = 0; i < 4; i++) {
-                output[i] = (byte)((x[i] & x[i]) | (y[i] & (~z[i])));
-            }
-
-            return output;
+        private uint GAuxFunc(uint x, uint y, uint z) {
+            return (x & x) | (y & (~z));
         }
 
-        private byte[] HAuxFunc(byte[] x, byte[] y, byte[] z) {
-            byte[] output = new byte[4];
-
-            for (int i = 0; i < 4; i++) {
-                output[i] = (byte)(x[i] ^ y[i] ^ z[i]);
-            }
-
-            return output;
+        private uint HAuxFunc(uint x, uint y, uint z) {
+            return x ^ y ^ z;
         }
 
-        private byte[] IAuxFunc(byte[] x, byte[] y, byte[] z) {
-            byte[] output = new byte[4];
-
-            for (int i = 0; i < 4; i++) {
-                output[i] = (byte)(y[i] ^ (x[i] | (~z[i])));
-            }
-
-            return output;
+        private uint IAuxFunc(uint x, uint y, uint z) {
+            return y ^ (x | (~z));
         }
 
         public string getHash() {
@@ -64,16 +62,23 @@ namespace HashingAlgorithms {
             int numberOfBlocks = (message.Length * 8) / 512;
 
             for (int i = 0; i < numberOfBlocks; i++) {
-                currentBlock = new byte[64];
-                Array.Copy(message, i * 64, currentBlock, 0, 64);
+                currentBlock = new uint[16];
+                for (int j = 0; j < 16; j++) {
+                    byte[] bytes = {
+                        message[(i * 64) + (j * 4)],
+                        message[(i * 64) + (j * 4) + 1],
+                        message[(i * 64) + (j * 4) + 2],
+                        message[(i * 64) + (j * 4) + 3]
+                    };
+                    currentBlock[j] = BitConverter.ToUInt32(bytes);
+                }
                 hash();
             }
 
 
+            string output = GetOutput();
 
-
-
-            return "";
+            return output;
         }
 
         private void hash() {
@@ -83,134 +88,85 @@ namespace HashingAlgorithms {
             bufferDD = bufferD;
 
             // Round 1
-            for (int i = 0; i < 16; i++) {
-                switch (i % 4) {
-                    case 0:
-                        Round1Function(bufferA, bufferB, bufferC, bufferD, i * 4, 7, i + 1);
-                        break;
-                    case 1:
-                        Round1Function(bufferD, bufferA, bufferB, bufferC, i * 4, 12, i + 1);
-                        break;
-                    case 2:
-                        Round1Function(bufferC, bufferD, bufferA, bufferB, i * 4, 17, i + 1);
-                        break;
-                    case 3:
-                        Round1Function(bufferB, bufferC, bufferD, bufferA, i * 4, 22, i + 1);
-                        break;
-                }
-            }
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 0, 7, 1, FAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 1, 12, 2, FAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 2, 17, 3, FAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 3, 22, 4, FAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 4, 7, 5, FAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 5, 12, 6, FAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 6, 17, 7, FAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 7, 22, 8, FAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 8, 7, 9, FAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 9, 12, 10, FAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 10, 17, 11, FAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 11, 22, 12, FAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 12, 7, 13, FAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 13, 12, 14, FAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 14, 17, 15, FAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 15, 22, 16, FAuxFunc(bufferC, bufferD, bufferA));
 
             // Round 2
-            for (int i = 0; i < 16; i++) {
-                switch (i % 4) {
-                    case 0:
-                        Round2Function(bufferA, bufferB, bufferC, bufferD, ((5 * i + 1) % 16) * 4, 5, i + 17);
-                        break;
-                    case 1:
-                        Round2Function(bufferD, bufferA, bufferB, bufferC, ((5 * i + 1) % 16) * 4, 9, i + 17);
-                        break;
-                    case 2:
-                        Round2Function(bufferC, bufferD, bufferA, bufferB, ((5 * i + 1) % 16) * 4, 14, i + 17);
-                        break;
-                    case 3:
-                        Round2Function(bufferB, bufferC, bufferD, bufferA, ((5 * i + 1) % 16) * 4, 20, i + 17);
-                        break;
-                }
-            }
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 1, 5, 17, GAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 6, 9, 18, GAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 11, 14, 19, GAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 0, 20, 20, GAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 5, 5, 21, GAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 10, 9, 22, GAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 15, 14, 23, GAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 4, 20, 24, GAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 9, 5, 25, GAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 14, 9, 26, GAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 3, 14, 27, GAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 8, 20, 28, GAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 13, 5, 29, GAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 2, 9, 30, GAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 7, 14, 31, GAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 12, 20, 32, GAuxFunc(bufferC, bufferD, bufferA));
 
             // Round 3
-            for (int i = 0; i < 16; i++) {
-                switch (i % 4) {
-                    case 0:
-                        Round3Function(bufferA, bufferB, bufferC, bufferD, ((3 * i + 5) % 16) * 4, 4, i + 33);
-                        break;
-                    case 1:
-                        Round3Function(bufferD, bufferA, bufferB, bufferC, ((3 * i + 5) % 16) * 4, 11, i + 33);
-                        break;
-                    case 2:
-                        Round3Function(bufferC, bufferD, bufferA, bufferB, ((3 * i + 5) % 16) * 4, 16, i + 33);
-                        break;
-                    case 3:
-                        Round3Function(bufferB, bufferC, bufferD, bufferA, ((3 * i + 5) % 16) * 4, 23, i + 33);
-                        break;
-                }
-            }
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 5, 4, 33, HAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 8, 11, 34, HAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 11, 16, 35, HAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 14, 23, 36, HAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 1, 4, 37, HAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 4, 11, 38, HAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 7, 16, 39, HAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 10, 23, 40, HAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 13, 4, 41, HAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 0, 11, 42, HAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 3, 16, 43, HAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 6, 23, 44, HAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 9, 4, 45, HAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 12, 11, 46, HAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 15, 16, 47, HAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 2, 23, 48, HAuxFunc(bufferC, bufferD, bufferA));
 
             // Round 4
-            for (int i = 0; i < 16; i++) {
-                switch (i % 4) {
-                    case 0:
-                        Round4Function(bufferA, bufferB, bufferC, bufferD, ((3 * i) % 16) * 4, 6, i + 49);
-                        break;
-                    case 1:
-                        Round4Function(bufferD, bufferA, bufferB, bufferC, ((3 * i) % 16) * 4, 10, i + 49);
-                        break;
-                    case 2:
-                        Round4Function(bufferC, bufferD, bufferA, bufferB, ((3 * i) % 16) * 4, 15, i + 49);
-                        break;
-                    case 3:
-                        Round4Function(bufferB, bufferC, bufferD, bufferA, ((3 * i) % 16) * 4, 21, i + 49);
-                        break;
-                }
-            }
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 0, 6, 1, IAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 7, 10, 2, IAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 14, 15, 3, IAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 5, 21, 4, IAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 12, 6, 5, IAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 3, 11, 6, IAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 10, 15, 7, IAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 1, 21, 8, IAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 8, 6, 9, IAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 15, 10, 10, IAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 6, 15, 11, IAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 13, 21, 12, IAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 4, 6, 13, IAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 11, 10, 14, IAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 2, 15, 15, IAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 9, 21, 16, IAuxFunc(bufferC, bufferD, bufferA));
 
-            for (int i = 0; i < 4; i++) {
-                bufferA[i] = (byte)(bufferA[i] + bufferAA[i]);
-                bufferB[i] = (byte)(bufferB[i] + bufferBB[i]);
-                bufferC[i] = (byte)(bufferC[i] + bufferCC[i]);
-                bufferD[i] = (byte)(bufferD[i] + bufferDD[i]);
-            }
-
-            for (int i = 0; i < 4; i++) {
-                Console.WriteLine(Convert.ToString(bufferA[i], 2).PadLeft(8, '0'));
-            }
-
-            for (int i = 0; i < 4; i++) {
-                Console.WriteLine(Convert.ToString(bufferB[i], 2).PadLeft(8, '0'));
-            }
-
-            for (int i = 0; i < 4; i++) {
-                Console.WriteLine(Convert.ToString(bufferC[i], 2).PadLeft(8, '0'));
-            }
-
-            for (int i = 0; i < 4; i++) {
-                Console.WriteLine(Convert.ToString(bufferD[i], 2).PadLeft(8, '0'));
-            }
-
-
-
+            bufferA = bufferA + bufferAA;
+            bufferB = bufferB + bufferBB;
+            bufferC = bufferC + bufferCC;
+            bufferD = bufferD + bufferDD;
         }
 
-        private void Round1Function(byte[] a, byte[] b, byte[] c, byte[] d, int k, int s, int i) {
-            byte[] FAuxValue = FAuxFunc(b, c, d);
-            for (int j = 0; j < 4; j++) {
-                a[j] = (byte)(b[j] + ((a[j] + FAuxValue[j]) + currentBlock[k] + BitConverter.GetBytes(TFunction(i))[j]) << s);
-            }
-        }
-
-        private void Round2Function(byte[] a, byte[] b, byte[] c, byte[] d, int k, int s, int i) {
-            byte[] GAuxValue = GAuxFunc(b, c, d);
-            for (int j = 0; j < 4; j++) {
-                a[j] = (byte)(b[j] + ((a[j] + GAuxValue[j]) + currentBlock[k] + BitConverter.GetBytes(TFunction(i))[j]) << s);
-            }
-        }
-
-        private void Round3Function(byte[] a, byte[] b, byte[] c, byte[] d, int k, int s, int i) {
-            byte[] HAuxValue = HAuxFunc(b, c, d);
-            for (int j = 0; j < 4; j++) {
-                a[j] = (byte)(b[j] + ((a[j] + HAuxValue[j]) + currentBlock[k] + BitConverter.GetBytes(TFunction(i))[j]) << s);
-            }
-        }
-
-        private void Round4Function(byte[] a, byte[] b, byte[] c, byte[] d, int k, int s, int i) {
-            byte[] IAuxValue = IAuxFunc(b, c, d);
-            for (int j = 0; j < 4; j++) {
-                a[j] = (byte)(b[j] + ((a[j] + IAuxValue[j]) + currentBlock[k] + BitConverter.GetBytes(TFunction(i))[j]) << s);
-            }
-        }
-
-        private long TFunction(int i) {
-            return (long)Math.Floor(Math.Pow(2, 32) * Math.Abs(Math.Sin(i)));
+        private void RoundFunction(ref uint a, uint b, uint c, uint d, int k, int s, int i, uint auxValue) {
+            a = b + (a + auxValue + currentBlock[k] + T[i - 1]) << s;
         }
 
         static private byte[] PadBits(byte[] bytes) {
@@ -236,11 +192,36 @@ namespace HashingAlgorithms {
             return paddedBytes;
         }
 
+        private string GetOutput() {
+            string output = bufferA.ToString("x8") +
+                bufferB.ToString("x8") +
+                bufferC.ToString("x8") +
+                bufferD.ToString("x8");
+
+            return output;
+        }
+
+        private uint ReverseInt(uint n) {
+            uint rev = 0;
+
+            while (n > 0) {
+                rev <<= 1;
+
+                if ((uint)(n & 1) == 1) {
+                    rev ^= 1;
+                }
+
+                n >>= 1;
+            }
+
+            return rev;
+        }
+
         private void InitBuffers() {
-            bufferA = new byte[] { 1, 35, 69, 103 };
-            bufferB = new byte[] { 137, 171, 205, 239 };
-            bufferC = new byte[] { 254, 220, 186, 152 };
-            bufferD = new byte[] { 118, 84, 50, 16 };
+            bufferA = 0x67452301;
+            bufferB = 0xefcdab89;
+            bufferC = 0x98badcfe;
+            bufferD = 0x10325476;
         }
 
     }
