@@ -147,22 +147,22 @@ namespace HashingAlgorithms {
             RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 2, 23, 48, HAuxFunc(bufferC, bufferD, bufferA));
 
             // Round 4
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 0, 6, 1, IAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 7, 10, 2, IAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 14, 15, 3, IAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 5, 21, 4, IAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 12, 6, 5, IAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 3, 11, 6, IAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 10, 15, 7, IAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 1, 21, 8, IAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 8, 6, 9, IAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 15, 10, 10, IAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 6, 15, 11, IAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 13, 21, 12, IAuxFunc(bufferC, bufferD, bufferA));
-            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 4, 6, 13, IAuxFunc(bufferB, bufferC, bufferD));
-            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 11, 10, 14, IAuxFunc(bufferA, bufferB, bufferC));
-            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 2, 15, 15, IAuxFunc(bufferD, bufferA, bufferB));
-            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 9, 21, 16, IAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 0, 6, 49, IAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 7, 10, 50, IAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 14, 15, 51, IAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 5, 21, 52, IAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 12, 6, 53, IAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 3, 10, 54, IAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 10, 15, 55, IAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 1, 21, 56, IAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 8, 6, 57, IAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 15, 10, 58, IAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 6, 15, 59, IAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 13, 21, 60, IAuxFunc(bufferC, bufferD, bufferA));
+            RoundFunction(ref bufferA, bufferB, bufferC, bufferD, 4, 6, 61, IAuxFunc(bufferB, bufferC, bufferD));
+            RoundFunction(ref bufferD, bufferA, bufferB, bufferC, 11, 10, 62, IAuxFunc(bufferA, bufferB, bufferC));
+            RoundFunction(ref bufferC, bufferD, bufferA, bufferB, 2, 15, 63, IAuxFunc(bufferD, bufferA, bufferB));
+            RoundFunction(ref bufferB, bufferC, bufferD, bufferA, 9, 21, 64, IAuxFunc(bufferC, bufferD, bufferA));
 
             // Adds temp buffer values onto updated buffer values
             bufferA = bufferA + bufferAA;
