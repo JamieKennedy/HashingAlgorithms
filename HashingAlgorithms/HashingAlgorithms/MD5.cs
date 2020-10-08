@@ -64,7 +64,7 @@ namespace HashingAlgorithms {
             InitBuffers();
             int numberOfBlocks = (message.Length * 8) / 512;
 
-            for (int i = 0; i < numberOfBlocks; i++) { // Each 512 bit block of the 
+            for (int i = 0; i < numberOfBlocks; i++) { // Each 512 bit block of the message
                 currentBlock = new uint[16];
                 // Copy 4 bytes into 1 32-but unsigned int
                 for (int j = 0; j < 16; j++) {
