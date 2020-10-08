@@ -68,12 +68,8 @@ namespace HashingAlgorithms {
                 currentBlock = new uint[16];
                 // Copy 4 bytes into 1 32-bit unsigned int
                 for (int j = 0; j < 16; j++) {
-                    byte[] bytes = {
-                        message[(i * 64) + (j * 4)],
-                        message[(i * 64) + (j * 4) + 1],
-                        message[(i * 64) + (j * 4) + 2],
-                        message[(i * 64) + (j * 4) + 3]
-                    };
+                    byte[] bytes = new byte[4];
+                    Array.Copy(message, (i * 64) + (j * 4), bytes, 0, 4);
                     currentBlock[j] = BitConverter.ToUInt32(bytes);
                 }
                 hash();
@@ -176,22 +172,23 @@ namespace HashingAlgorithms {
             // Number of bytes that need to added
             int padBytesNum = (512 - 64 - (length % 512)) / 8;
 
-            byte[] paddedBytes = new byte[bytes.Length + padBytesNum + 8];
+            byte[] paddedBytes = new byte[64];
 
-            for (int i = 0; i < paddedBytes.Length; i++) {
-                if (i < bytes.Length) {
-                    paddedBytes[i] = bytes[i];
-                } else if (i == bytes.Length) {
-                    paddedBytes[i] = 128;
-                } else if (i < bytes.Length + padBytesNum) {
-                    paddedBytes[i] = 0;
-                } else {
-                    // Adds 64-bit representation of the message size
-                    long length64 = length;
-                    byte[] length64Bytes = BitConverter.GetBytes(length64);
-                    paddedBytes[i] = length64Bytes[i - bytes.Length - padBytesNum];
-                }
-            }
+            // Adds the message bytes
+            Array.Copy(bytes, 0, paddedBytes, 0, bytes.Length);
+
+            // Adds 1 followed by 0's
+            byte[] padBytes = new byte[padBytesNum];
+            padBytes[0] = 128;
+            Array.Copy(padBytes, 0, paddedBytes, bytes.Length, padBytesNum);
+
+            // Adds 64-bit representation of the message size
+            long length64 = length;
+            byte[] length64Bytes = BitConverter.GetBytes(length64);
+            Array.Reverse(length64Bytes);
+            Array.Copy(length64Bytes, 0, paddedBytes, bytes.Length + padBytesNum, 8);
+            //paddedBytes[i] = length64Bytes[i - bytes.Length - padBytesNum];
+
             return paddedBytes;
         }
 
